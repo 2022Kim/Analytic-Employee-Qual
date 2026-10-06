@@ -1,0 +1,22 @@
+# ---- PERSONAL DATA: never commit ----
+data/*
+!data/README.md
+outputs/
+*.joblib
+# raw HR exports wherever they end up
+*.xlsx
+*.xls
+!templates/*.xlsx
+
+# reports/ holds aggregate-only results and MAY be committed after a look
+reports/synthetic/
+
+# ---- Python / tooling ----
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+.venv/
+venv/
+.streamlit/secrets.toml
