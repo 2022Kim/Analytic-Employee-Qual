@@ -1,0 +1,89 @@
+# =============================================================
+# Rotation Fit — configuration
+# Every setting the pipeline uses lives here. Paths are relative to the
+# directory you run the command from (normally the repo root).
+# =============================================================
+
+paths:
+  career: data/Career_Transaction_Karyawan_2012-2026_excel.xlsx
+  career_skiprows: 4
+  dataset: data/Dataset.xlsx
+  jobfamily_map: null        # 2 columns: position, job_family
+  hris_demographics: null    # columns named in `hris_columns` below
+  outputs: outputs           # PERSONAL DATA (model, cohort) — never commit
+  report: reports/latest     # aggregate numbers only — safe to share
+
+hris_columns:
+  id: NIK
+  gender: gender
+  marital: marital
+
+# ---------- cohort and target ----------
+cohort:
+  exclude_status: [Outsource]
+  check_old_status: true
+  keep_career_transition: [Movement]
+  exclude_types:
+    - Pelaksana Tugas
+    - Pelaksana Harian
+    - Pejabat Sementara
+    - Pengganti Sementara
+    - Promotion
+    - Demotion
+    - Perubahan Kontrak
+    - Employment Status Change
+  window_start: "2024-10-01"
+  window_end: "2025-03-31"
+  real_change_rule: or          # or | and | none
+  baseline_population: all      # all | cohort
+  target: success_fair          # success_fair | success_simple
+
+ratings:
+  before: Kinerja 2024     # rating before the studied rotation (training)
+  after: Kinerja 2025      # rating after the rotation (training label)
+  current: Kinerja 2025    # latest rating, used when scoring a NEW rotation
+  order:
+    Need Improvement: 1
+    Satisfactory: 2
+    Successful: 3
+    Excellent: 4
+    Outstanding: 5
+    Top Performer: 5
+
+# ---------- EQS ----------
+eqs:
+  kinerja_points: {1: 50, 2: 75, 3: 100, 4: 110, 5: 120}
+  pelatihan_columns: [Pelatihan 1, Pelatihan 2, Pelatihan 3, Pelatihan 4, Pelatihan 5]
+  sertifikasi_columns: [Sertifikasi 1, Sertifikasi 2, Sertifikasi 3]
+  tfidf_threshold: 0.15
+  aspirasi_points:
+    Aspirasi Individual: 20
+    Aspirasi Jobholder: 25
+    Aspirasi Unit: 25
+    Aspirasi Supervisor: 30
+  aspirasi_match_threshold: 0.35
+
+# ---------- similarity ----------
+similarity:
+  dims: [usia, pendidikan_years, job_family, gender, marital]
+  min_team_size: 4
+
+# ---------- experiment ----------
+experiment:
+  holdout_size: 0.20            # untouched final test set
+  holdout_seed: 42
+  split_ratios: [0.30, 0.25, 0.20]   # test size of each split inside the dev set
+  seeds: [1, 2, 3, 4, 5]
+  scalers: [standard, minmax]
+  models: [dummy, logreg, rf, ann]
+  ann_backend: sklearn          # sklearn | keras | auto
+  selection_metric: pr_auc      # pr_auc | auc | brier
+  calibration: sigmoid          # sigmoid | isotonic | none
+  importance_repeats: 10
+  # ---- "significant attributes only" model ----
+  reduced_selection: lr_test    # lr_test (likelihood-ratio, Holm) | importance (top-k)
+  reduced_alpha: 0.05           # family-wise significance level for lr_test
+  reduced_top_k: 8              # maximum number of attributes in the reduced model
+  reduced_tolerance: 0.01       # max loss in selection_metric accepted for a simpler model
+  deploy: auto                  # full | reduced | auto (reduced if loss <= tolerance)
+  min_subgroup_size: 20
